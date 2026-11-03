@@ -27,7 +27,7 @@ El script imprime una contraseña temporal aleatoria **una sola vez**. Al entrar
 
 ## 3. Vercel
 
-1. Importa el repositorio con **Root Directory = `PaginaWEB`**.
+1. Importa `kiinMagazine/KIIN-web` (la raíz del repositorio ya es la app): deja **Root Directory vacío**.
 2. Variables de entorno:
 
 | Variable | Valor |

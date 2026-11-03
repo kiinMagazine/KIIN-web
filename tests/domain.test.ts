@@ -1,0 +1,17 @@
+import {describe,it,expect} from 'vitest';
+import {parseSpotifyUrl,parseYoutubeUrl} from '@/lib/embeds';
+import {slugify,uniqueSlug} from '@/lib/slugify';
+import {score,scoreLabel} from '@/lib/score';
+import {isoWeek,pickSlug,mexicoToIso,mexicoDate} from '@/lib/week';
+import {contrast} from '@/lib/contrast';
+const id='1234567890abcdefghijkl';
+describe('Enlaces musicales',()=>{
+ it.each(['track','album','artist','playlist'])('Spotify %s',kind=>expect(parseSpotifyUrl(`https://open.spotify.com/intl-es/${kind}/${id}?si=ejemplo`)?.embedUrl).toBe(`https://open.spotify.com/embed/${kind}/${id}`));
+ it.each(['https://youtube.com/watch?v=abcdefghijk','https://www.youtube.com/embed/abcdefghijk','https://youtu.be/abcdefghijk','https://music.youtube.com/watch?v=abcdefghijk'])('YouTube %s',url=>expect(parseYoutubeUrl(url)?.embedUrl).toBe('https://www.youtube-nocookie.com/embed/abcdefghijk'));
+ it('listas de YouTube',()=>expect(parseYoutubeUrl('https://youtube.com/playlist?list=PL123456789012345')?.embedUrl).toBe('https://www.youtube-nocookie.com/embed/videoseries?list=PL123456789012345'));
+ it.each(['javascript:alert(1)','data:text/html,x','http://open.spotify.com/track/'+id,'https://open.spotify.com.evil.com/track/'+id,'https://user:pass@open.spotify.com/track/'+id,'https://open.spotify.com:999/track/'+id,'https://open.spotify.com/track/'+id+'?a='+'x'.repeat(300),'https://open.spotify.com/track/breve','https://evil.com/watch?v=abcdefghijk','https://user:pass@youtube.com/watch?v=abcdefghijk','http://youtu.be/abcdefghijk','https://youtube.com.evil.com/watch?v=abcdefghijk'])('rechaza %s',url=>{expect(parseSpotifyUrl(url)).toBeNull();expect(parseYoutubeUrl(url)).toBeNull();});
+});
+describe('Slugs',()=>{it('normaliza acentos, ñ y símbolos',()=>expect(slugify('  Música, diseño y NIÑEZ / escena! ')).toBe('musica-diseno-y-ninez-escena'));it('limita longitud',()=>expect(slugify('a'.repeat(150))).toHaveLength(100));it('resuelve colisiones sin exceder 100',()=>{expect(uniqueSlug('escena',['escena','escena-2'])).toBe('escena-3');expect(uniqueSlug('a'.repeat(100),['a'.repeat(100)])).toHaveLength(100);});});
+describe('Score',()=>{it.each([[14,'Descartar'],[15,'Evaluar'],[19,'Evaluar'],[20,'Publicar'],[25,'Publicar']])('%i: %s',(n,label)=>expect(scoreLabel(Number(n))).toBe(label));it('suma cinco criterios',()=>expect(score([4,5,4,3,5])).toEqual({total:21,label:'Publicar'}));});
+describe('Semanas ISO en Ciudad de México',()=>{it.each([['2021-01-01',2020,53,'2020-12-28'],['2022-01-01',2021,52,'2021-12-27'],['2024-12-30',2025,1,'2024-12-30'],['2026-10-01',2026,40,'2026-09-28'],['2027-01-03',2026,53,'2026-12-28']])('%s',(date,year,week,monday)=>expect(isoWeek(String(date))).toEqual({year,week,week_start:monday}));it('usa el día mexicano cerca de medianoche UTC',()=>expect(mexicoDate(new Date('2026-10-05T02:00:00Z'))).toBe('2026-10-04'));it('slug semanal',()=>expect(pickSlug('cancion',2025,1)).toBe('cancion-2025-s01'));it('convierte programación mexicana',()=>expect(mexicoToIso('2026-10-01T12:30')).toBe('2026-10-01T18:30:00.000Z'));});
+describe('Contraste WCAG',()=>{it.each([['#222222','#FEE8D0'],['#FEE8D0','#222222'],['#222222','#F25623'],['#F25623','#222222'],['#A3A3A3','#222222']])('%s / %s cumple AA',(a,b)=>expect(contrast(a,b)).toBeGreaterThanOrEqual(4.5));it.each([['#F25623','#FEE8D0'],['#A3A3A3','#FEE8D0']])('%s / %s no se usa como texto',(a,b)=>expect(contrast(a,b)).toBeLessThan(4.5));});

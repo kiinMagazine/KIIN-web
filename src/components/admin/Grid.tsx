@@ -1,14 +1,17 @@
 'use client';
 import {useState} from 'react';
+import {useActionLock} from '@/lib/use-action-lock';
 import {useRouter} from 'next/navigation';
 import {saveGridItem,removeGridItem,toggleLike} from '@/app/admin/team-actions';
 import type {ActionResult} from '@/app/admin/actions';
 import type {GridRow} from '@/lib/admin';
 const fmt=(iso:string|null)=>iso?new Intl.DateTimeFormat('es-MX',{timeZone:'America/Mexico_City',dateStyle:'medium',timeStyle:'short'}).format(new Date(iso)):'Sin fecha';
 export default function Grid({rows,posts,admins,demo}:{rows:GridRow[];posts:{id:string;title:string}[];admins:number;demo:boolean}){
-  const [message,setMessage]=useState(''),[busy,setBusy]=useState(false),[ig,setIg]=useState(false);
+  const [message,setMessage]=useState(''),[ig,setIg]=useState(false);
   const router=useRouter();
-  async function run(task:()=>Promise<ActionResult>){setBusy(true);try{const r=await task();setMessage(r.message);if(r.ok)router.refresh();}catch{setMessage('No pudimos completar la acción. Inténtalo nuevamente.');}finally{setBusy(false);}}
+  const lock=useActionLock(),{busy,ready}=lock;
+  // Un clic = un envío: el candado se toma en el mismo clic (el estado de React llega un render tarde).
+  function run(task:()=>Promise<ActionResult>){return lock.run(async()=>{try{const r=await task();setMessage(r.message);if(r.ok)router.refresh();}catch{setMessage('No pudimos completar la acción. Inténtalo nuevamente.');}});}
   return <>
     <p role="status">{message}</p>
     <section className="account-section"><h2>Programar</h2>
@@ -18,7 +21,7 @@ export default function Grid({rows,posts,admins,demo}:{rows:GridRow[];posts:{id:
         <label><input type="checkbox" checked={ig} onChange={e=>setIg(e.target.checked)}/> También publicar en Instagram</label>
         {ig&&<label>Hora para Instagram<input name="ig_at" type="datetime-local" required/></label>}
         <label>Nota para el equipo<input name="note" maxLength={500}/></label>
-        <button disabled={demo||busy}>Guardar en la parrilla</button>
+        <button disabled={demo||!ready||busy}>Guardar en la parrilla</button>
       </form>
       <p className="muted">Etapa 1: a la hora de Instagram los tres administradores reciben un aviso para publicar. La publicación automática llegará con la integración de Meta.</p>
     </section>
@@ -28,9 +31,9 @@ export default function Grid({rows,posts,admins,demo}:{rows:GridRow[];posts:{id:
         <span>Web: {fmt(r.web_publish_at)}</span>
         <span>{r.instagram?`Instagram: ${fmt(r.instagram_at)}`:'Sin Instagram'}</span>
         {r.note&&<span className="muted">{r.note}</span>}
-        <button type="button" aria-pressed={r.liked} disabled={demo||busy} onClick={()=>run(()=>toggleLike(r.id))}>{r.liked?'♥':'♡'} Me gusta · {r.likes}/{admins}</button>
+        <button type="button" aria-pressed={r.liked} disabled={demo||!ready||busy} onClick={()=>run(()=>toggleLike(r.id))}>{r.liked?'♥':'♡'} Me gusta · {r.likes}/{admins}</button>
         {r.likes>=admins&&<em> Aprobada por los {admins}</em>}
-        <button type="button" disabled={demo||busy} onClick={()=>run(()=>removeGridItem(r.id))}>Quitar</button>
+        <button type="button" disabled={demo||!ready||busy} onClick={()=>run(()=>removeGridItem(r.id))}>Quitar</button>
       </li>)}</ul>}
     </section>
   </>;

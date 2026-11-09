@@ -1,5 +1,6 @@
 'use client';
 import {useState} from 'react';
+import {useActionLock} from '@/lib/use-action-lock';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import type {AdminReview} from '@/lib/admin';
@@ -17,9 +18,11 @@ const fmt=(n:number)=>n.toLocaleString('es-MX',{minimumFractionDigits:1,maximumF
 
 /** Estado, votos del equipo y acciones de una reseña. */
 export default function ReviewPanel({review,names,demo,detail=false}:{review:AdminReview;names:Record<string,string>;demo:boolean;detail?:boolean}){
-  const [message,setMessage]=useState<ActionResult|null>(null),[busy,setBusy]=useState(false),[stars,setStars]=useState(review.mine?.stars_vote??0),[comment,setComment]=useState(review.mine?.comment??''),[when,setWhen]=useState('');
+  const [message,setMessage]=useState<ActionResult|null>(null),[stars,setStars]=useState(review.mine?.stars_vote??0),[comment,setComment]=useState(review.mine?.comment??''),[when,setWhen]=useState('');
   const router=useRouter();
-  async function run(task:()=>Promise<ActionResult>){setBusy(true);try{const r=await task();setMessage(r);if(r.ok)router.refresh();}catch{setMessage({ok:false,message:'No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo.'});}finally{setBusy(false);}}
+  const lock=useActionLock(),{busy,ready}=lock;
+  // Un clic = un envío: el candado se toma en el mismo clic (el estado de React llega un render tarde).
+  function run(task:()=>Promise<ActionResult>){return lock.run(async()=>{try{const r=await task();setMessage(r);if(r.ok)router.refresh();}catch{setMessage({ok:false,message:'No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo.'});}});}
   const st=stage(review),approvals=review.votes.filter(v=>v.approved).length,voting=review.review.state!=='draft'&&review.status!=='published'&&review.status!=='archived';
   const average=review.votes.filter(v=>v.approved).reduce((a,v)=>a+v.stars_vote,0)/(approvals||1);
   return <article className="review-admin">
@@ -36,15 +39,15 @@ export default function ReviewPanel({review,names,demo,detail=false}:{review:Adm
     {detail&&review.votes.length>0&&<ul className="vote-list">{review.votes.map(v=><li key={v.admin_id}><strong>{names[v.admin_id]??'Administrador'}</strong>: {v.approved?'autoriza':'aún no autoriza'} · {v.stars_vote} ★{v.comment&&<> — «{v.comment}»</>}</li>)}</ul>}
     {!detail&&<Link className="read-more" href={`/admin/resenas/${review.id}`}>{voting&&!review.mine?'Votar ↗':'Abrir ↗'}</Link>}
     {detail&&<div className="review-actions">
-      {review.review.state==='draft'&&review.status!=='archived'&&<button disabled={demo||busy} onClick={()=>run(()=>submitReview(review.id))}>Enviar a votación</button>}
+      {review.review.state==='draft'&&review.status!=='archived'&&<button disabled={demo||!ready||busy} onClick={()=>run(()=>submitReview(review.id))}>Enviar a votación</button>}
       {voting&&<fieldset className="vote-form"><legend>Tu voto</legend>
         <StarInput name={`stars-${review.id}`} value={stars} onChange={setStars} label="Tus estrellas KIIN"/>
         <label>Comentario para el equipo (opcional)<input value={comment} maxLength={500} onChange={e=>setComment(e.target.value)}/></label>
-        <div className="form-actions"><button className="primary" disabled={demo||busy||!stars} onClick={()=>run(()=>voteReview({review_id:review.id,approved:true,stars_vote:stars,comment}))}>{stars?`Autorizar con ${stars} ★`:'Elige tus estrellas'}</button>
-        <button disabled={demo||busy||!stars} onClick={()=>run(()=>voteReview({review_id:review.id,approved:false,stars_vote:stars,comment}))}>Todavía no autorizo</button></div>
+        <div className="form-actions"><button className="primary" disabled={demo||!ready||busy||!stars} onClick={()=>run(()=>voteReview({review_id:review.id,approved:true,stars_vote:stars,comment}))}>{stars?`Autorizar con ${stars} ★`:'Elige tus estrellas'}</button>
+        <button disabled={demo||!ready||busy||!stars} onClick={()=>run(()=>voteReview({review_id:review.id,approved:false,stars_vote:stars,comment}))}>Todavía no autorizo</button></div>
       </fieldset>}
-      {review.review.state==='approved'&&review.status!=='published'&&<div className="publish-box"><label>Fecha de publicación (opcional · hora de Ciudad de México)<input type="datetime-local" value={when} onChange={e=>setWhen(e.target.value)}/></label><button className="primary" disabled={demo||busy} onClick={()=>run(()=>publishReview(review.id,when))}>{when?'Programar publicación':'Publicar ahora'}</button></div>}
-      {review.status!=='archived'&&<button disabled={demo||busy} onClick={()=>run(()=>changeContent({table:'posts',id:review.id,operation:'archive'}))}>Archivar</button>}
+      {review.review.state==='approved'&&review.status!=='published'&&<div className="publish-box"><label>Fecha de publicación (opcional · hora de Ciudad de México)<input type="datetime-local" value={when} onChange={e=>setWhen(e.target.value)}/></label><button className="primary" disabled={demo||!ready||busy} onClick={()=>run(()=>publishReview(review.id,when))}>{when?'Programar publicación':'Publicar ahora'}</button></div>}
+      {review.status!=='archived'&&<button disabled={demo||!ready||busy} onClick={()=>run(()=>changeContent({table:'posts',id:review.id,operation:'archive'}))}>Archivar</button>}
     </div>}
     {message&&<p role={message.ok?'status':'alert'} className={message.ok?'notice-ok':'notice-error'}>{message.message}</p>}
   </article>;

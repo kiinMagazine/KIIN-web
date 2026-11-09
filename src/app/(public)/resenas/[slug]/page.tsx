@@ -5,7 +5,7 @@ import KiinImage,{mediaUrl} from '@/components/KiinImage';
 import Markdown from '@/components/Markdown';
 import Music from '@/components/Music';
 import Share from '@/components/Share';
-import SaveButton from '@/components/SaveButton';
+import EngagementBar from '@/components/EngagementBar';
 import Stars from '@/components/Stars';
 import JsonLd from '@/components/JsonLd';
 export const revalidate=300;
@@ -18,5 +18,5 @@ export default async function ReviewPage({params}:Props){
     <JsonLd data={{'@context':'https://schema.org','@type':'Review',name:`${r.title} · ${r.artist}`,itemReviewed:{'@type':r.kind==='album'?'MusicAlbum':'MusicRecording',name:r.title,byArtist:{'@type':'MusicGroup',name:r.artist}},reviewRating:r.stars?{'@type':'Rating',ratingValue:r.stars,bestRating:5,worstRating:1}:undefined,author:{'@type':'Organization',name:'KIIN'},...(r.published_at?{datePublished:r.published_at}:{})}}/>
     <header className="page-header"><span className="eyebrow">{r.kind==='album'?'Reseña de álbum':'Reseña de sencillo'}</span><h1>{r.title}</h1><p>{r.artist}</p><Stars value={r.stars} size="lg"/></header>
     <div className="article-grid"><figure><KiinImage media={r.cover} priority square/><figcaption>{r.cover?.credit}</figcaption></figure>
-      <div><Markdown text={r.analysis_md}/>{r.sources_md&&<aside className="review-sources"><h2>Cómo lo escuchamos</h2><Markdown text={r.sources_md}/></aside>}<Music spotify={r.spotify_url} youtube={r.youtube_url} embeds/><p className="muted review-note">Opinión editorial fundamentada en la obra. Las estrellas KIIN son el promedio de la valoración independiente de cada integrante del equipo. <a href="/derechos-musica">Criterio editorial y derechos</a>.</p><SaveButton kind="review" id={r.id}/><Share title={`${r.title} · ${r.artist}`}/></div></div></div>;
+      <div><Markdown text={r.analysis_md}/>{r.sources_md&&<aside className="review-sources"><h2>Cómo lo escuchamos</h2><Markdown text={r.sources_md}/></aside>}<Music spotify={r.spotify_url} youtube={r.youtube_url} embeds/><p className="muted review-note">Opinión editorial fundamentada en la obra. Las estrellas KIIN son el promedio de la valoración independiente de cada integrante del equipo. <a href="/derechos-musica">Criterio editorial y derechos</a>.</p><EngagementBar postId={r.id}/><Share title={`${r.title} · ${r.artist}`}/></div></div></div>;
 }

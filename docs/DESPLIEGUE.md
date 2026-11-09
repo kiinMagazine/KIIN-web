@@ -9,7 +9,7 @@ Pasos para publicar la web con Supabase y Vercel. Nada de esto se ha ejecutado: 
 3. **Authentication → Providers → Email**: activo, con **Confirm email** activado.
 4. **Authentication → Sign In / Providers**: deja habilitado el registro de nuevos usuarios (los lectores crean su cuenta). El acceso a `/admin` no depende de eso: solo entra quien esté en la tabla `admins` (máximo 3) y, si activó TOTP, con su segundo factor.
 5. **Authentication → Email Templates**: en **Confirm signup** y **Magic Link** incluye el código con `{{ .Token }}` (por ejemplo: «Tu código de KIIN es {{ .Token }}»). La web pide ese código de 6 dígitos para activar cuenta y para recuperar la contraseña. Sin esto los lectores no recibirán el PIN.
-6. **Authentication → SMTP Settings**: configura un servicio SMTP propio. El correo integrado de Supabase tiene límites muy bajos y no sirve para un lanzamiento.
+6. **Correo**: la app envía la confirmación y la recuperación con **Resend** (no con el correo de Supabase). Verifica `kiinmagazine.com` en Resend, crea una API key con permiso solo de envío y configúrala como `RESEND_API_KEY` en `.env.local` y en Vercel. Remitente: `KIIN <contacto@kiinmagazine.com>`.
 7. **Authentication → URL Configuration**: Site URL = la URL pública definitiva; añade la misma a Redirect URLs.
 8. **Project Settings → API**: copia la URL, la clave `anon` y la clave `service_role`. La `service_role` es secreta: solo en el servidor.
 

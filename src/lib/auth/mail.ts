@@ -1,19 +1,22 @@
-import nodemailer from 'nodemailer';
+import 'server-only';
+import {Resend} from 'resend';
 
 /**
- * Correo transaccional desde la cuenta oficial (kiin.colab@gmail.com) por SMTP.
- * Credenciales solo en variables de entorno: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM.
- * Sin SMTP no se envía nada y solo se registra el asunto y el destinatario enmascarado (nunca el enlace).
+ * Correo transaccional con Resend desde el dominio propio (kiinmagazine.com).
+ * Variables (solo servidor): RESEND_API_KEY (clave con permiso solo de envío), MAIL_FROM y MAIL_REPLY_TO (opcionales).
+ * Errores: sendMail nunca lanza; devuelve false y quien llama responde igual exista o no la cuenta.
+ * Registros: solo el código de error y el destinatario enmascarado. Nunca el cuerpo, enlaces, tokens ni la clave.
  */
-type Mail={to:string;subject:string;text:string;html:string};
-let transport:nodemailer.Transporter|null=null;
+export type Mail={to:string;subject:string;text:string;html:string};
+export const DEFAULT_FROM='KIIN <contacto@kiinmagazine.com>';
+export const DEFAULT_REPLY_TO='contacto@kiinmagazine.com';
+const SEND_TIMEOUT_MS=10_000;
+let client:Resend|null=null;
 /** a***@dominio: suficiente para depurar sin escribir el correo completo en los registros. */
 export function maskEmail(email:string){const [u,d]=email.split('@');return `${(u||'').slice(0,1)}***@${d||''}`;}
-function configured(){return !!(process.env.SMTP_HOST&&process.env.SMTP_USER&&process.env.SMTP_PASS);}
-function getTransport(){
-  if(!transport){const port=Number(process.env.SMTP_PORT)||465;transport=nodemailer.createTransport({host:process.env.SMTP_HOST,port,secure:port===465,auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS},connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000});}
-  return transport;
-}
+function getClient(key:string){if(!client)client=new Resend(key);return client;}
+/** Solo para pruebas: olvida el cliente creado con una clave anterior. */
+export function resetMailClientForTests(){client=null;}
 
 /** Base de los enlaces. Nunca se toma de la cabecera Host (evita envenenar enlaces de recuperación). */
 export function siteBase(){
@@ -23,17 +26,25 @@ export function siteBase(){
   throw new Error('Falta NEXT_PUBLIC_SITE_URL en producción.');
 }
 
-/** Envía un correo. Devuelve false si no se pudo (el llamador no lo revela al usuario). */
+/** Envía un correo. Devuelve false si no se pudo (el llamador no lo revela al usuario). Sin reintentos: una sola capa. */
 export async function sendMail(mail:Mail):Promise<boolean>{
-  if(!configured()){
-    // Nunca se imprime el cuerpo: contiene enlaces de un solo uso (recuperación/confirmación).
-    if(process.env.NODE_ENV!=='production'){console.info(`[mail] SMTP sin configurar (desarrollo): no se envió «${mail.subject}» a ${maskEmail(mail.to)}. Configura SMTP_* en .env.local.`);return false;}
-    console.error('[mail] SMTP sin configurar en producción');return false;
+  const key=process.env.RESEND_API_KEY;
+  if(!key){
+    // Configuración del sistema, no culpa de quien pide el correo. Nunca se imprime el cuerpo.
+    if(process.env.NODE_ENV!=='production'){console.info(`[mail] RESEND_API_KEY sin configurar (desarrollo): no se envió «${mail.subject}» a ${maskEmail(mail.to)}.`);return false;}
+    console.error('[mail] RESEND_API_KEY sin configurar en producción');return false;
   }
+  let timer:ReturnType<typeof setTimeout>|undefined;
   try{
-    await getTransport().sendMail({from:process.env.MAIL_FROM||`KIIN <${process.env.SMTP_USER}>`,to:mail.to,subject:mail.subject,text:mail.text,html:mail.html});
+    const timeout=new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error('timeout')),SEND_TIMEOUT_MS);});
+    const send=getClient(key).emails.send({from:process.env.MAIL_FROM||DEFAULT_FROM,replyTo:process.env.MAIL_REPLY_TO||DEFAULT_REPLY_TO,to:[mail.to],subject:mail.subject,text:mail.text,html:mail.html});
+    const {error}=await Promise.race([send,timeout]);
+    if(error){console.error(`[mail] Resend rechazó el envío a ${maskEmail(mail.to)}: ${error.name}`);return false;}
     return true;
-  }catch(error){console.error('[mail] envío fallido:',error instanceof Error?error.message:'error');return false;}
+  }catch(error){
+    console.error(`[mail] envío fallido a ${maskEmail(mail.to)}: ${error instanceof Error&&error.message==='timeout'?'tiempo de espera agotado':'error de red'}`);
+    return false;
+  }finally{if(timer)clearTimeout(timer);}
 }
 
 const esc=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));

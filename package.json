@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "backup": "node scripts/backup.mjs",
-    "security": "node scripts/security.mjs"
+    "security": "node scripts/security.mjs",
+    "seed:admins": "node --env-file=.env.local scripts/seed-admins.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -22,18 +23,22 @@
     "@fontsource/newsreader": "^5.3.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
+    "bcryptjs": "^3.0.3",
     "next": "^16.3.8",
+    "nodemailer": "^8.0.11",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-markdown": "^10.1.0",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
+    "server-only": "^0.0.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.3",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "eslint": "^9.39.5",

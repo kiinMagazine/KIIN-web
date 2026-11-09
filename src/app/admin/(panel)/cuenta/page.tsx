@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {isDemo} from '@/lib/data';
 import Account from '@/components/admin/Account';
-export default async function Page({searchParams}:{searchParams:Promise<{cambiar?:string}>}){const forced=!!(await searchParams).cambiar;return <><h1>Tu cuenta</h1>{forced&&<p className="admin-banner" role="alert">Entraste con una contraseña temporal. Elige tu propia contraseña para continuar.</p>}<Account demo={isDemo()}/></>;}
+export default function Page(){return <><h1>Verificación en dos pasos</h1><p className="muted">Tu contraseña, nombre de usuario y sesión están en <Link href="/cuenta#seguridad">Mi perfil</Link>.</p><Account demo={isDemo()}/></>;}

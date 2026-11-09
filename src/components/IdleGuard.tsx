@@ -1,8 +1,9 @@
 'use client';
 import {useEffect} from 'react';
 import {idleLogout,touchActivity} from '@/app/cuenta-actions';
-import {ADMIN_IDLE_MS,READER_IDLE_MS,TOUCH_EVERY_MS} from '@/lib/session';
-const hasSession=()=>document.cookie.split('; ').some(c=>/^sb-.*-auth-token/.test(c));
+import {ADMIN_IDLE_MS,HINT_COOKIE,READER_IDLE_MS,TOUCH_EVERY_MS} from '@/lib/session';
+// Las cookies de sesión son httpOnly: el navegador solo ve el indicador no sensible.
+const hasSession=()=>document.cookie.split('; ').some(c=>c.startsWith(`${HINT_COOKIE}=`));
 /** Cierra la sesión solo tras un periodo de inactividad real y registra la actividad mientras navegas. */
 export default function IdleGuard(){
   useEffect(()=>{
@@ -13,7 +14,7 @@ export default function IdleGuard(){
     const tick=async()=>{
       if(done||!hasSession())return;
       const now=Date.now(),admin=location.pathname.startsWith('/admin'),limit=admin?ADMIN_IDLE_MS:READER_IDLE_MS;
-      if(now-last>limit){done=true;await idleLogout();location.assign(admin?'/admin/login?expirada=1':'/cuenta/entrar?expirada=1');return;}
+      if(now-last>limit){done=true;await idleLogout();location.assign(`/cuenta/entrar?expirada=1&next=${encodeURIComponent(location.pathname)}`);return;}
       if(now-last<TOUCH_EVERY_MS&&now-touched>TOUCH_EVERY_MS){touched=now;void touchActivity();}
     };
     const id=window.setInterval(tick,60000);

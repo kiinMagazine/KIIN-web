@@ -5,6 +5,8 @@ const csp = ["default-src 'self'", `script-src 'self' 'unsafe-inline'${isDev ? "
 const config: NextConfig = {
   agentRules:false,
   images:{unoptimized:true}, poweredByHeader:false,
+  // No registrar argumentos de Server Actions en la terminal: incluyen contraseñas y tokens.
+  logging:{serverFunctions:false},
   async headers(){return [{source:'/:path*',headers:[
     ...(!isDev ? [{key:'Strict-Transport-Security',value:'max-age=63072000; includeSubDomains'}] : []),
     {key:'X-Content-Type-Options',value:'nosniff'},

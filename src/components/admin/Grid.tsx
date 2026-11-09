@@ -12,7 +12,7 @@ export default function Grid({rows,posts,admins,demo}:{rows:GridRow[];posts:{id:
   return <>
     <p role="status">{message}</p>
     <section className="account-section"><h2>Programar</h2>
-      <form onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);run(()=>saveGridItem({post_id:f.get('post_id'),web_publish_at:String(f.get('web')||'')||null,instagram:ig,instagram_at:ig?String(f.get('ig_at')||'')||null:null,note:String(f.get('note')||'')}));}}>
+      <form method="post" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);run(()=>saveGridItem({post_id:f.get('post_id'),web_publish_at:String(f.get('web')||'')||null,instagram:ig,instagram_at:ig?String(f.get('ig_at')||'')||null:null,note:String(f.get('note')||'')}));}}>
         <label>Publicación<select name="post_id" required defaultValue=""><option value="" disabled>Elige una publicación</option>{posts.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label>
         <label>Salida en la página (hora de Ciudad de México)<input name="web" type="datetime-local"/></label>
         <label><input type="checkbox" checked={ig} onChange={e=>setIg(e.target.checked)}/> También publicar en Instagram</label>

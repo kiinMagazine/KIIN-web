@@ -4,7 +4,7 @@ import {useRouter} from 'next/navigation';
 import {browserClient} from '@/lib/supabase/client';
 import {registerMedia} from '@/app/admin/actions';
 import type {Variant} from '@/lib/data/types';
-export default function MediaUploader({demo,onDone}:{demo:boolean;onDone?:(id:string)=>void}){const [busy,setBusy]=useState(false),[message,setMessage]=useState('');const router=useRouter();return <form className="form-grid" onSubmit={async e=>{e.preventDefault();const form=e.currentTarget,data=new FormData(form),file=data.get('file') as File;setBusy(true);setMessage('Preparando variantes…');const uploaded:string[]=[];try{
+export default function MediaUploader({demo,onDone}:{demo:boolean;onDone?:(id:string)=>void}){const [busy,setBusy]=useState(false),[message,setMessage]=useState('');const router=useRouter();return <form method="post" className="form-grid" onSubmit={async e=>{e.preventDefault();const form=e.currentTarget,data=new FormData(form),file=data.get('file') as File;setBusy(true);setMessage('Preparando variantes…');const uploaded:string[]=[];try{
  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>15*1024*1024||!file.size)throw new Error('Elige JPG, PNG o WebP de hasta 15 MB.');
  const bitmap=await createImageBitmap(file);if(bitmap.width*bitmap.height>60_000_000){bitmap.close();throw new Error('La imagen tiene demasiados píxeles. Redúcela antes de subirla.');}
  const square=data.get('square')==='on',sourceWidth=square?Math.min(bitmap.width,bitmap.height):bitmap.width,sourceHeight=square?sourceWidth:bitmap.height;

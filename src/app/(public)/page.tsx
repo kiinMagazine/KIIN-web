@@ -21,8 +21,8 @@ const values=brand.values.split('\n').map((line,index)=>{
 export const revalidate=300;
 export function generateMetadata(){return metadata('La cultura no es noticia.','Historias, escenas y personas que están construyendo la cultura. Desde Querétaro.','/');}
 
-export default async function Home({searchParams}:{searchParams:Promise<{pagina?:string}>}){
-  const page=pageNumber((await searchParams).pagina);
+export default async function Home({searchParams}:{searchParams:Promise<{pagina?:string;acceso?:string}>}){
+  const q=await searchParams;const page=pageNumber(q.pagina);
   const [posts,featured,picks,reviews,music,events,...culture]=await Promise.all([
     getPosts({page,limit:6}),getFeatured(),getCurrentPicks(),getReviews({limit:3}),
     getPosts({territory:'musica',limit:3}),getPosts({territory:'eventos',limit:3}),
@@ -35,6 +35,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{pagina?
     ...picks.filter(p=>p.cover).map(p=>({href:`/semana/${p.slug}`,title:`${p.title} — ${p.artist}`,kicker:p.kind==='album'?'Álbum de la semana':'Canción de la semana',src:mediaUrl(p.cover!.variants.lg.path)})),
   ].slice(0,8);
   return <>
+    {q.acceso==='denegado'&&<p className="wrap message" role="alert">Tu cuenta no tiene acceso al panel de administración.</p>}
     <JsonLd data={{'@context':'https://schema.org','@type':'WebSite',name:'KIIN',...(site.url?{url:site.url}:{}),inLanguage:'es-MX'}}/>
     <div className="home-stage"><section className="hero editorial-hero wrap" aria-labelledby="portada-title">
       <div className="hero-top eyebrow"><span>Medio y plataforma cultural</span><span>Querétaro, México ↗</span></div>

@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {tempPassword} from '@/lib/temp-password';
+import {tempPassword} from '@/lib/auth/crypto';
 import {passwordSchema} from '@/lib/validators';
 describe('Contraseña temporal',()=>{
   it('cumple la política de contraseñas y no se repite',()=>{

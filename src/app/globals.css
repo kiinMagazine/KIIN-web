@@ -263,3 +263,46 @@ button.primary:hover,.button.primary:hover{background:#222222;color:#FEE8D0}
 .hero-territories a[aria-current=page],.hero-territories a[aria-current=true]{background:#f25623;color:#222}
 /* Con sesión de admin el encabezado tiene más elementos: el menú pasa a su propia fila desde 900 px (antes 750) para no desbordar. */
 @media(max-width:900px){.header-band .site-header{flex-wrap:wrap;gap:8px}.header-band .site-header nav{order:3;overflow-x:auto;width:100%;white-space:nowrap;gap:20px;scrollbar-width:none}.header-band .site-header nav::-webkit-scrollbar{display:none}}
+
+/* ───────── Ajustes de alineación y simetría (2026-11-10) ───────── */
+/* Logo: el enlace tenía caja de línea extra y quedaba 4 px más arriba que el menú. */
+.site-header>a:first-child{display:flex;align-items:center;line-height:0}
+/* Botón principal de portada: la flecha quedaba separada 28 px del texto; ahora texto y flecha forman un bloque centrado. */
+.hero-button{gap:12px;justify-content:center}
+.hero-actions{align-items:center}
+.hero-secondary{display:inline-flex;align-items:center;gap:6px;min-height:45px;padding-block:0}
+/* Encabezados de sección: el enlace lateral flotaba a media altura entre el antetítulo y el título; se alinea con la base del título. */
+.section-head{align-items:flex-end}
+.section-head>a{margin-bottom:.55em}
+.section-head>.week-stamp{align-self:center}
+/* Filtros de la portada: mismo estilo de píldora que los filtros de Reseñas y Buscar (misma función, misma forma). */
+.filters{align-items:center}
+.filters a{display:inline-flex;align-items:center;min-height:36px;padding:6px 15px;border-radius:999px;line-height:1.2}
+.filters a:hover{text-decoration:none;border-color:var(--accent)}
+/* Contraseña: «Mostrar» iba fuera del campo y lo hacía más angosto que los demás; ahora va dentro, todos los campos miden lo mismo. */
+.password-row{position:relative;display:block}
+.password-row input{width:100%;padding-right:92px}
+.password-row .link-button{position:absolute;top:50%;right:8px;transform:translateY(-50%);min-height:36px;padding:6px 8px;font-size:.85rem}
+/* Buscar: la etiqueta quedaba pegada arriba a la izquierda del campo; ahora se centra con el campo y el botón. */
+.search-form{align-items:center}
+.search-form label{flex:none;margin:0}
+.search-form input,.search-form button{min-height:50px}
+.search-form button{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+@media(max-width:650px){.search-form label{width:100%}.search-form button{flex:1 1 auto}}
+/* Franja del manifiesto: el botón se centra con el bloque de texto completo. */
+.manifesto-strip .button{white-space:nowrap}
+/* Botones con icono + texto: centrado vertical uniforme. */
+.button{text-align:center}
+.engage-btn,.auth-prompt-actions>*,.form-actions>*{vertical-align:middle}
+/* Perfil: el botón «Guardar nombre» quedaba al nivel del texto de ayuda; ahora comparte renglón y altura con el campo. */
+.input-row{display:flex;gap:10px;align-items:stretch}
+.input-row input{flex:1;min-width:0}
+.input-row button{min-height:46px;white-space:nowrap;display:inline-flex;align-items:center}
+.inline-form .field{flex:1 1 100%;max-width:620px}
+@media(max-width:500px){.input-row{flex-wrap:wrap}.input-row button{flex:1 1 100%;justify-content:center}}
+/* Seguridad: tres bloques sin recuadro, mismo espaciado interno y 40 px entre ellos (antes los títulos quedaban pegados al botón anterior). */
+.security-grid{display:grid;gap:40px;max-width:680px}
+.security-card{display:grid;gap:12px;justify-items:start;align-content:start}
+.security-card h2,.security-card h3{margin:0;font-size:clamp(1.6rem,2.6vw,2.1rem);line-height:1.1}
+.security-card p{margin:0}
+.security-card .button,.security-card button{margin-top:4px}

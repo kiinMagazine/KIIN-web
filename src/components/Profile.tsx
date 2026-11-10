@@ -48,8 +48,10 @@ export default function Profile({profile,email,role,likes,saves,history,picks}:{
         <h2>Tu perfil</h2>
         <dl className="profile-facts"><div><dt>Correo</dt><dd>{email}</dd></div><div><dt>Tipo de cuenta</dt><dd>{role==='admin'?<>Administrador · <Link href="/admin">Ir al panel</Link></>:'Lector'}</dd></div></dl>
         <form method="post" className="inline-form" onSubmit={e=>{e.preventDefault();run(()=>updateUsername({username}),()=>router.refresh());}}>
-          <div className="field"><label htmlFor="username">Nombre de usuario</label><input id="username" value={username} onChange={e=>setUsername(e.target.value)} required minLength={3} maxLength={30} pattern="[a-zA-Z0-9_.]{3,30}" aria-describedby="username-help" aria-invalid={!!result?.errors?.username}/><small id="username-help" className="hint">De 3 a 30 caracteres: letras sin acentos, números, punto o guion bajo.</small></div>
-          <button disabled={!ready||busy||username===profile.username}>Guardar nombre</button>
+          <div className="field"><label htmlFor="username">Nombre de usuario</label>
+            <div className="input-row"><input id="username" value={username} onChange={e=>setUsername(e.target.value)} required minLength={3} maxLength={30} pattern="[a-zA-Z0-9_.]{3,30}" aria-describedby="username-help" aria-invalid={!!result?.errors?.username}/>
+              <button disabled={!ready||busy||username===profile.username}>Guardar nombre</button></div>
+            <small id="username-help" className="hint">De 3 a 30 caracteres: letras sin acentos, números, punto o guion bajo.</small></div>
         </form>
         <h2>Lo que sigues</h2>
         <p className="muted">Te mostramos aquí las novedades publicadas desde tu última visita.</p>
@@ -62,17 +64,24 @@ export default function Profile({profile,email,role,likes,saves,history,picks}:{
         {!!picks.length&&<><h3>Selecciones de la semana</h3><ul className="profile-list">{picks.map(p=><li key={p.id}><Link className="profile-item" href={`/semana/${p.slug}`}><span className="profile-thumb">{p.cover&&<KiinImage media={p.cover} square/>}</span><span><span className="eyebrow">{p.kind==='album'?'Álbum':'Canción'} de la semana</span><strong>{p.title}</strong><small className="muted">{p.artist}</small></span></Link></li>)}</ul></>}</>}
       {tab==='historial'&&<><div className="tab-head"><h2>Historial</h2>{!!history.length&&<button className="link-button" disabled={!ready||busy} onClick={()=>run(clearHistory as ()=>Promise<ReaderResult>,()=>router.refresh())}>Borrar historial</button>}</div>
         <PostList items={history} verb="Abierta por última vez" empty={<><p>Aquí verás las publicaciones que abras con tu sesión iniciada.</p><Link className="button" href="/">Empezar a leer</Link></>}/></>}
-      {tab==='seguridad'&&<>
-        <h2>Contraseña</h2>
-        <p>Cámbiala cuando quieras. Al hacerlo cerramos tus otras sesiones.</p>
-        <Link className="button" href="/cuenta/cambiar-contrasena">Cambiar contraseña</Link>
-        <h3>¿No recuerdas la actual?</h3>
-        <p>Te enviamos un enlace a <strong>{email}</strong> para elegir una nueva. Vence en 30 minutos.</p>
-        <button disabled={!ready||busy} onClick={()=>run(()=>requestPasswordReset({email}))}>Enviarme enlace de recuperación</button>
-        <h2>Sesión</h2>
-        <button disabled={!ready||busy} onClick={()=>run(signOut,()=>{router.push('/');router.refresh();})}>Cerrar sesión</button>
-        {role==='admin'&&<p className="muted">Verificación en dos pasos del panel: <Link href="/admin/cuenta">configúrala aquí</Link>.</p>}
-      </>}
+      {tab==='seguridad'&&<div className="security-grid">
+        <section className="security-card" aria-labelledby="sec-password">
+          <h2 id="sec-password">Contraseña</h2>
+          <p>Cámbiala cuando quieras. Al hacerlo cerramos tus otras sesiones.</p>
+          <Link className="button" href="/cuenta/cambiar-contrasena">Cambiar contraseña</Link>
+        </section>
+        <section className="security-card" aria-labelledby="sec-recover">
+          <h3 id="sec-recover">¿No recuerdas la actual?</h3>
+          <p>Te enviamos un enlace a <strong>{email}</strong> para elegir una nueva. Vence en 30 minutos.</p>
+          <button disabled={!ready||busy} onClick={()=>run(()=>requestPasswordReset({email}))}>Enviarme enlace de recuperación</button>
+        </section>
+        <section className="security-card" aria-labelledby="sec-session">
+          <h2 id="sec-session">Sesión</h2>
+          <p>Sal de tu cuenta en este dispositivo.</p>
+          <button disabled={!ready||busy} onClick={()=>run(signOut,()=>{router.push('/');router.refresh();})}>Cerrar sesión</button>
+          {role==='admin'&&<p className="muted">Verificación en dos pasos del panel: <Link href="/admin/cuenta">configúrala aquí</Link>.</p>}
+        </section>
+      </div>}
     </section>
   </div>;
 }

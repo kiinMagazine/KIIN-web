@@ -1,2 +1,2 @@
-import BrandLoader from '@/components/BrandLoader';
-export default function Loading(){return <BrandLoader label="Cargando tu perfil"/>;}
+import {ProfileSkeleton} from '@/components/Skeleton';
+export default function Loading(){return <ProfileSkeleton/>;}

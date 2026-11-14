@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- SVG de marca estáticos. */
 import {brandAssets} from '@/config/site';
 /**
- * Pantalla de carga y transición de marca. Recrea en CSS/SVG la animación del video de KIIN
+ * Animación de marca (entrada de sesión). Recrea en CSS/SVG la animación del video de KIIN
  * (logotipo → giro 3D al isotipo → sticker con contorno blanco → regreso al logotipo → globo de líneas que se dibuja),
  * más ligera que el MP4, nítida a cualquier tamaño y con versión por tema. Con prefers-reduced-motion se muestra estática.
  */
@@ -17,11 +17,5 @@ export function KiinFlip({once=false}:{once?:boolean}){
       </svg>
       <span className="kf-shadow"/>
     </div>
-  </div>;
-}
-export default function BrandLoader({label='Cargando'}:{label?:string}){
-  return <div className="brand-loader" role="status" aria-live="polite">
-    <KiinFlip/>
-    <span className="brand-loader-text">{label}…</span>
   </div>;
 }

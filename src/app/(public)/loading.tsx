@@ -1,2 +1,2 @@
-import BrandLoader from '@/components/BrandLoader';
-export default function Loading(){return <BrandLoader/>;}
+import {PageSkeleton} from '@/components/Skeleton';
+export default function Loading(){return <PageSkeleton/>;}

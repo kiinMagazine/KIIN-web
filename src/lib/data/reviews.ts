@@ -18,7 +18,7 @@ async function reviewsQuery({page=1,limit=12,kind}:{page?:number;limit?:number;k
   if(isDemo()){const rows=demoReviews.filter(r=>!kind||r.kind===kind);return {items:rows.slice(start,start+limit),count:rows.length};}
   let query=base().order('published_at',{ascending:false}).order('id').range(start,start+limit-1);
   if(kind)query=query.eq('post_reviews.subject',kind);
-  const {data,error,count}=await query;if(error)throw new Error('No pudimos consultar las reseñas.');
+  const {data,error,count}=await query;if(error?.code==='PGRST103')return {items:[],count:0};if(error)throw new Error('No pudimos consultar las reseñas.');
   return {items:((data??[]) as unknown as Row[]).map(toReview),count:count??0};
 }
 async function reviewBySlugQuery(slug:string){
